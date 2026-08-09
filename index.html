@@ -452,7 +452,7 @@
                             
                             // LA SOLUCIÓN DEL ESTADO: Busca el nombre 'Estado' o fuerza la lectura de la Columna T (índice 19)
                             estado: buscar(['estado']) || Object.values(fila)[19] || 'NUEVO'
-                            Origen: buscar(['origen', 'medio', 'ingreso'], []) || 'WhatsApp' // NUEVA LÍNEA 
+                            origen: buscar(['origen', 'medio', 'ingreso'], []) || 'WhatsApp' // NUEVA LÍNEA 
                         };
                     });
                     
@@ -480,7 +480,7 @@
                             descripcion: buscar(['desc']) || Object.values(fila)[6] || '',
                             evidencia: Object.values(fila).find(val => typeof val === 'string' && val.includes('drive.google.com')),
                             estado: buscar(['estado']) || Object.values(fila)[19] || ''
-                            Origen: buscar(['origen', 'medio', 'ingreso'], []) || 'WhatsApp' // NUEVA LÍNEA
+                            origen: buscar(['origen', 'medio', 'ingreso'], []) || 'WhatsApp' // NUEVA LÍNEA
                         };
                     });
                     renderPQR();
