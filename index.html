@@ -389,7 +389,7 @@
         // ==========================================
         // ⚠️ REEMPLAZA ESTA URL CON TU NUEVA IMPLEMENTACIÓN
         // ==========================================
-        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw5OlnH7XIoXTfbfe8mZIbAGokT84G6oC_PSI_5Jp0e-L32iY-gaBFNSVfBaUpkOJ35wg/exec?action=getPedidos";
+        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxw6oya1yoLrzRkukXfHz049qnrd86Zp0LJImuET4XNoWzFvlIbVegGrpOy6XmJmrrhiQ/exec?action=getPedidos";
         const GOOGLE_URL_PQR = GOOGLE_WEB_APP_URL.replace("action=getPedidos", "action=getPQR");
         const GOOGLE_URL_CRM = GOOGLE_WEB_APP_URL.replace("action=getPedidos", "action=getCRM");
         const NUMERO_DOMICILIARIO = "573054813630"; 
@@ -451,7 +451,7 @@
                             guia: buscar(['guia', 'guía']) || null,
                             
                             // LA SOLUCIÓN DEL ESTADO: Busca el nombre 'Estado' o fuerza la lectura de la Columna T (índice 19)
-                            estado: buscar(['estado']) || Object.values(fila)[19] || 'NUEVO'
+                            estado: buscar(['estado']) || Object.values(fila)[19] || 'NUEVO',
                             origen: buscar(['origen', 'medio', 'ingreso'], []) || 'WhatsApp' // NUEVA LÍNEA  
                         };
                     });
@@ -479,7 +479,7 @@
                             telefono: buscar(['tel', 'cel']) || Object.values(fila)[9] || '',
                             descripcion: buscar(['desc']) || Object.values(fila)[6] || '',
                             evidencia: Object.values(fila).find(val => typeof val === 'string' && val.includes('drive.google.com')),
-                            estado: buscar(['estado']) || Object.values(fila)[19] || ''
+                            estado: buscar(['estado']) || Object.values(fila)[19] || '',
                             origen: buscar(['origen', 'medio', 'ingreso'], []) || 'WhatsApp' // NUEVA LÍNEA
                         };
                     });
