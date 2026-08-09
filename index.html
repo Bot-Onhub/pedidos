@@ -452,6 +452,7 @@
                             
                             // LA SOLUCIÓN DEL ESTADO: Busca el nombre 'Estado' o fuerza la lectura de la Columna T (índice 19)
                             estado: buscar(['estado']) || Object.values(fila)[19] || 'NUEVO'
+                            Origen: buscar(['origen', 'medio', 'ingreso'], []) || 'WhatsApp' // NUEVA LÍNEA 
                         };
                     });
                     
@@ -479,6 +480,7 @@
                             descripcion: buscar(['desc']) || Object.values(fila)[6] || '',
                             evidencia: Object.values(fila).find(val => typeof val === 'string' && val.includes('drive.google.com')),
                             estado: buscar(['estado']) || Object.values(fila)[19] || ''
+                            Origen: buscar(['origen', 'medio', 'ingreso'], []) || 'WhatsApp' // NUEVA LÍNEA
                         };
                     });
                     renderPQR();
@@ -571,7 +573,9 @@
                 if (estadoActual === "DESPACHADO") selectClass = "despachado";
                 if (estadoActual === "ENTREGADO") selectClass = "entregado";
                 if (estadoActual === "CANCELADO") selectClass = "cancelado";
-
+                let origenIcon = (order.origen && order.origen.toLowerCase().includes('instagram')) 
+                        ? '<i class="fa-brands fa-instagram" style="color: #E1306C; font-size: 14px;"></i> IG' 
+                        : '<i class="fa-brands fa-whatsapp" style="color: #25D366; font-size: 14px;"></i> WA';
                 tr.innerHTML = `
                     <td class="td-id">${order.id}</td>
                     <td class="td-cliente truncate-cell">${order.cliente}</td>
@@ -582,6 +586,7 @@
                     <td class="truncate-cell" style="font-weight: 600;">${order.producto}</td>
                     <td class="text-center"><span class="td-cant">${order.cantidad}</span></td>
                     <td class="td-price">${formatCurrency(order.precioUnitario)}</td>
+                    <td class="text-center font-bold text-gray-700" style="font-size: 11px;">${origenIcon}</td> <!-- NUEVA CELDA -->
                     <td class="text-center">
                         <select class="status-select ${selectClass}" data-old-value="${estadoActual}" onchange="confirmarCambioEstado('${order.id}', this, '${order.telefono}', '${order.cliente}')">
                             <option value="NUEVO" ${estadoActual === 'NUEVO' ? 'selected' : ''}>NUEVO</option>
@@ -625,7 +630,9 @@
                 if(telefonoLimpio.length === 10) telefonoLimpio = '57' + telefonoLimpio;
                 
                 let estadoActual = pqr.estado || 'Pendiente';
-
+                let origenIcon = (pqr.origen && pqr.origen.toLowerCase().includes('instagram')) 
+                    ? '<i class="fa-brands fa-instagram" style="color: #E1306C; font-size: 14px;"></i> IG' 
+                    : '<i class="fa-brands fa-whatsapp" style="color: #25D366; font-size: 14px;"></i> WA';
                 tr.innerHTML = `
                     <td class="td-id">${pqr.idPedido}</td>
                     <td>${pqr.fecha}</td>
@@ -647,6 +654,7 @@
                             <option value="Solucionado" ${estadoActual.includes('Solucionado') ? 'selected' : ''}>✅ Solucionado</option>
                             <option value="Cancelado" ${estadoActual.includes('Cancelado') ? 'selected' : ''}>❌ Cancelado</option>
                         </select>
+                        <td class="text-center font-bold text-gray-700" style="font-size: 11px;">${origenIcon}</td> <!-- NUEVA CELDA -->
                     </td>
                     
                     <!-- NUEVO: BOTÓN DE WHATSAPP -->
