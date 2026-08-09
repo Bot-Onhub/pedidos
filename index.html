@@ -694,8 +694,8 @@
                 alert("Hubo un error de red al intentar actualizar el estado. Revisa tu conexión.");
             }
         }
-        }
-       function renderCRM() {
+        
+        function renderCRM() {
             const tbody = document.getElementById('crm-table-body');
             tbody.innerHTML = '';
             if (!dbCRM || dbCRM.length === 0) return tbody.innerHTML = `<tr><td colspan="11" class="loader-container" style="color: #94a3b8;">No hay clientes registrados en el CRM.</td></tr>`;
