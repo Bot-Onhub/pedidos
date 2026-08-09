@@ -249,6 +249,8 @@
                                 <th>Descripción</th>
                                 <th class="text-center">Evidencia</th>
                                 <th class="text-center">Estado</th>
+                                <!-- NUEVA COLUMNA DE ACCIÓN -->
+                                <th class="text-center">Acción</th>
                             </tr>
                         </thead>
                         <tbody id="pqr-table-body">
@@ -385,7 +387,7 @@
         // ==========================================
         // ⚠️ REEMPLAZA ESTA URL CON TU NUEVA IMPLEMENTACIÓN
         // ==========================================
-        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxIMxjl4Mgj9Je45pORtwnTWk7ISbBM1vdeNnJg08atsb_eRz1TyjPTmx3EYYgU03Wefg/exec";
+        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw5OlnH7XIoXTfbfe8mZIbAGokT84G6oC_PSI_5Jp0e-L32iY-gaBFNSVfBaUpkOJ35wg/exec";
         const GOOGLE_URL_PQR = GOOGLE_WEB_APP_URL.replace("action=getPedidos", "action=getPQR");
         const GOOGLE_URL_CRM = GOOGLE_WEB_APP_URL.replace("action=getPedidos", "action=getCRM");
         const NUMERO_DOMICILIARIO = "573054813630"; 
@@ -611,27 +613,87 @@
         function renderPQR() {
             const tbody = document.getElementById('pqr-table-body');
             tbody.innerHTML = '';
-            if (dbPQRs.length === 0) return tbody.innerHTML = `<tr><td colspan="8" class="loader-container" style="color: #94a3b8;">No hay PQR registrados.</td></tr>`;
+            if (dbPQRs.length === 0) return tbody.innerHTML = `<tr><td colspan="9" class="loader-container" style="color: #94a3b8;">No hay PQR registrados.</td></tr>`;
 
             dbPQRs.forEach(pqr => {
                 const tr = document.createElement('tr');
-                let estadoClass = pqr.estado.toLowerCase().includes('resuelto') ? 'status-despachado' : 'status-pendiente';
+                
+                // Formatear el teléfono para el enlace de WhatsApp
+                let telefonoLimpio = String(pqr.telefono).replace(/\D/g, '');
+                if(telefonoLimpio.length === 10) telefonoLimpio = '57' + telefonoLimpio;
+                
+                let estadoActual = pqr.estado || 'Pendiente';
+
                 tr.innerHTML = `
                     <td class="td-id">${pqr.idPedido}</td>
                     <td>${pqr.fecha}</td>
                     <td style="font-weight:600; text-transform:capitalize;">${pqr.novedad}</td>
                     <td class="td-cliente">${pqr.cliente}</td>
                     <td class="td-contact"><i class="fa-solid fa-phone"></i> ${pqr.telefono}</td>
-                    <td class="truncate-cell">${pqr.descripcion}</td>
+                    <td class="truncate-cell" title="${pqr.descripcion}">${pqr.descripcion}</td>
                     <td class="text-center">
                         ${pqr.evidencia && pqr.evidencia.includes('http') ? 
                           `<a href="${pqr.evidencia}" target="_blank" class="link-soporte"><i class="fa-solid fa-image"></i> Ver Foto</a>` 
                           : `<span class="no-soporte">Sin foto</span>`}
                     </td>
-                    <td class="text-center"><span class="status-badge ${estadoClass}">${pqr.estado}</span></td>
+                    
+                    <!-- NUEVO: SELECTOR DE ESTADOS PQR -->
+                    <td class="text-center">
+                        <select class="status-select" style="min-width: 110px;" onchange="actualizarEstadoPQR('${pqr.idPedido}', this.value)">
+                            <option value="Pendiente" ${estadoActual.includes('Pendiente') ? 'selected' : ''}>⏳ Pendiente</option>
+                            <option value="En Revisión" ${estadoActual.includes('Revisión') ? 'selected' : ''}>⚙️ En Revisión</option>
+                            <option value="Solucionado" ${estadoActual.includes('Solucionado') ? 'selected' : ''}>✅ Solucionado</option>
+                            <option value="Cancelado" ${estadoActual.includes('Cancelado') ? 'selected' : ''}>❌ Cancelado</option>
+                        </select>
+                    </td>
+                    
+                    <!-- NUEVO: BOTÓN DE WHATSAPP -->
+                    <td class="text-center">
+                        <a href="https://wa.me/${telefonoLimpio}" target="_blank" class="btn-action btn-moto" style="text-decoration: none; display: inline-flex;">
+                            <i class="fa-brands fa-whatsapp"></i> Contactar
+                        </a>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        // ==========================================
+        // NUEVA FUNCIÓN: ENVÍA EL ESTADO PQR AL BACKEND
+        // ==========================================
+        async function actualizarEstadoPQR(idPedido, nuevoEstado) {
+            try {
+                // UX: Muestra animación de carga en el modal
+                document.getElementById('modal-title').textContent = 'Actualizando PQR';
+                document.getElementById('modal-message').innerHTML = `Guardando estado <b>${nuevoEstado}</b> para el ticket ${idPedido}...`;
+                document.getElementById('modal-icon').className = 'modal-icon info';
+                document.getElementById('modal-icon').innerHTML = '<div class="loader" style="width:24px; height:24px; border-width:2px; margin: 0 auto;"></div>';
+                document.getElementById('modal-input-group').style.display = 'none';
+                document.getElementById('modal-btn-cancel').style.display = 'none';
+                document.getElementById('modal-btn-primary').style.display = 'none';
+                document.getElementById('custom-modal').classList.add('active');
+
+                // Enviar la orden al servidor
+                const url = GOOGLE_WEB_APP_URL.replace("action=getPedidos", "action=updatePQRStatus")
+                            + `&id=${encodeURIComponent(idPedido)}`
+                            + `&status=${encodeURIComponent(nuevoEstado)}`;
+                
+                await fetch(url, { redirect: "follow" });
+                
+                // UX: Éxito
+                document.getElementById('modal-icon').className = 'modal-icon success';
+                document.getElementById('modal-icon').innerHTML = '<i class="fa-solid fa-check"></i>';
+                document.getElementById('modal-message').innerHTML = `Estado actualizado correctamente en la base de datos.`;
+                document.getElementById('modal-btn-primary').style.display = 'block';
+                document.getElementById('modal-btn-primary').textContent = "Entendido";
+                document.getElementById('modal-btn-primary').onclick = closeModal;
+                
+            } catch (error) {
+                console.error("Error al actualizar PQR:", error);
+                closeModal();
+                alert("Hubo un error de red al intentar actualizar el estado. Revisa tu conexión.");
+            }
+        }
         }
 
        function renderCRM() {
