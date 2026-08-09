@@ -271,17 +271,20 @@
                 <div class="table-container">
                     <table id="crm-table">
                         <thead>
-                            <tr>
-                                <th>Teléfono</th>
-                                <th>Nombre</th>
-                                <th>Ciudad</th>
-                                <th>Correo</th>
-                                <th class="text-center">Total Compras</th>
-                                <th>Total Gastado</th>
-                                <th>Última Compra</th>
-                                <th class="text-center">Etiqueta</th>
-                                <th class="text-center">Campaña 30D</th>
-                            </tr>
+                           <tr>
+            <th>Teléfono</th>
+            <th>Nombre</th>
+            <th>Ciudad</th>
+            <th>Correo</th>
+            <th class="text-center">Total Compras</th>
+            <th>Total Gastado</th>
+            <th>Última Compra</th>
+            <th class="text-center">Etiqueta</th>
+            <th class="text-center">Campaña 30D</th>
+            <!-- NUEVAS COLUMNAS -->
+            <th class="text-center">Etiqueta</th>
+            <th class="text-center">Acción</th>
+        </tr>
                         </thead>
                         <tbody id="crm-table-body">
                             <!-- Datos CRM inyectados -->
@@ -631,10 +634,10 @@
             });
         }
 
-        function renderCRM() {
+       function renderCRM() {
             const tbody = document.getElementById('crm-table-body');
             tbody.innerHTML = '';
-            if (!dbCRM || dbCRM.length === 0) return tbody.innerHTML = `<tr><td colspan="9" class="loader-container" style="color: #94a3b8;">No hay clientes registrados en el CRM.</td></tr>`;
+            if (!dbCRM || dbCRM.length === 0) return tbody.innerHTML = `<tr><td colspan="11" class="loader-container" style="color: #94a3b8;">No hay clientes registrados en el CRM.</td></tr>`;
 
             // Ordenamos por total de compras (de mayor a menor)
             dbCRM.sort((a, b) => {
@@ -645,6 +648,12 @@
 
             dbCRM.forEach(cliente => {
                 if(!cliente['Teléfono']) return; // saltar vacíos
+                
+                // Limpiar número para WhatsApp
+                let telefonoLimpio = String(cliente['Teléfono']).replace(/\D/g, '');
+                if(telefonoLimpio.length === 10) telefonoLimpio = '57' + telefonoLimpio;
+                
+                let estadoPQR = cliente['Estado PQR'] || 'Pendiente';
                 
                 const tr = document.createElement('tr');
                 let etiquetaClass = 'status-ingresado'; 
@@ -664,11 +673,62 @@
                     <td class="truncate-cell">${cliente['Fecha Última Compra']}</td>
                     <td class="text-center"><span class="status-badge ${etiquetaClass}">${cliente['Etiqueta']}</span></td>
                     <td class="text-center"><span class="status-badge ${campanaClass}">${cliente['Campaña 30D']}</span></td>
+                    
+                    <!-- NUEVO: SELECTOR DE ESTADO -->
+                    <td class="text-center">
+                        <select class="status-select" style="min-width: 105px;" onchange="actualizarEstadoCRM('${telefonoLimpio}', this.value)">
+                            <option value="Pendiente" ${estadoPQR === 'Pendiente' ? 'selected' : ''}>⏳ Pendiente</option>
+                            <option value="Solucionado" ${estadoPQR === 'Solucionado' ? 'selected' : ''}>✅ Solucionado</option>
+                            <option value="Cancelado" ${estadoPQR === 'Cancelado' ? 'selected' : ''}>❌ Cancelado</option>
+                        </select>
+                    </td>
+                    
+                    <!-- NUEVO: BOTÓN WHATSAPP -->
+                    <td class="text-center">
+                        <a href="https://wa.me/${telefonoLimpio}" target="_blank" class="btn-action btn-moto" style="text-decoration: none; display: inline-flex;">
+                            <i class="fa-brands fa-whatsapp"></i> Contactar
+                        </a>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
+        // ==========================================
+        // NUEVA FUNCIÓN: ENVÍA EL ESTADO AL BACKEND
+        // ==========================================
+        async function actualizarEstadoCRM(telefono, nuevoEstado) {
+            try {
+                // UX: Muestra animación de carga en el modal
+                document.getElementById('modal-title').textContent = 'Actualizando CRM';
+                document.getElementById('modal-message').innerHTML = `Guardando estado <b>${nuevoEstado}</b> para el cliente...`;
+                document.getElementById('modal-icon').className = 'modal-icon info';
+                document.getElementById('modal-icon').innerHTML = '<div class="loader" style="width:24px; height:24px; border-width:2px; margin: 0 auto;"></div>';
+                document.getElementById('modal-input-group').style.display = 'none';
+                document.getElementById('modal-btn-cancel').style.display = 'none';
+                document.getElementById('modal-btn-primary').style.display = 'none';
+                document.getElementById('custom-modal').classList.add('active');
+
+                const url = GOOGLE_WEB_APP_URL.replace("action=getPedidos", "action=updateCRMStatus")
+                            + `&tel=${encodeURIComponent(telefono)}`
+                            + `&status=${encodeURIComponent(nuevoEstado)}`;
+                
+                await fetch(url, { redirect: "follow" });
+                
+                // UX: Éxito
+                document.getElementById('modal-icon').className = 'modal-icon success';
+                document.getElementById('modal-icon').innerHTML = '<i class="fa-solid fa-check"></i>';
+                document.getElementById('modal-message').innerHTML = `Estado actualizado correctamente en la base de datos.`;
+                document.getElementById('modal-btn-primary').style.display = 'block';
+                document.getElementById('modal-btn-primary').textContent = "Entendido";
+                document.getElementById('modal-btn-primary').onclick = closeModal;
+                
+            } catch (error) {
+                console.error(error);
+                closeModal();
+                alert("Hubo un error de red al intentar actualizar el estado. Revisa tu conexión.");
+            }
+        }
         function calcularKPIs() {
             if(dbOrders.length === 0) return;
             
