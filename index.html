@@ -207,6 +207,7 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
+                                <th>Fecha del Pedido</th>
                                 <th>Nombre del Cliente</th>
                                 <th>Teléfono</th>
                                 <th>Correo</th>
@@ -580,6 +581,7 @@
                         : '<i class="fa-brands fa-whatsapp" style="color: #25D366; font-size: 14px;"></i> WA';
                 tr.innerHTML = `
                     <td class="td-id">${order.id}</td>
+                    <td class="truncate-cell" style="font-size: 11px; font-weight: 600; color: #64748b;">${order.fecha}</td>
                     <td class="td-cliente truncate-cell">${order.cliente}</td>
                     <td class="td-contact"><i class="fa-solid fa-phone"></i> ${order.telefono}</td>
                     <td class="td-contact truncate-cell"><i class="fa-solid fa-envelope"></i> ${order.correo}</td>
